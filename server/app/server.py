@@ -73,13 +73,20 @@ async def post_file(file: UploadFile) -> dict:
 @app.post("/chat", tags=["OpenAI"])
 async def post_chat(chat: Chat) -> dict:
 
-    url = os.getenv("OPENAI_API_URL")
+    url = f'{os.getenv("OPENAI_API_URL")}/chatCompletions'
     api_key = os.getenv("OPENAI_API_KEY")
+    data = {
+        "choices": [{
+            "message": {
+                "role": "assistant",
+                "content": "I apologize for the inconvenience, as it appears that I am encountering some issues in processing your request at this time."
+            }
+        }]
+    }
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}",
-        "User-Agent": "Lucy"
+        "api-key": api_key
     }
 
     payload = {
@@ -91,17 +98,11 @@ async def post_chat(chat: Chat) -> dict:
     for message in chat.messages:
         payload["messages"].append({"role": message.role, "content": message.content})
 
-    response = requests.post(url, headers=headers, json=payload)
-    if(response.status_code == 200):
-        data = response.json()
-    else:
-        data = {
-            "choices": [{
-                "message": {
-                    "role": "assistant",
-                    "content": "I apologize for the inconvenience, as it appears that I am encountering some issues in processing your request at this time."
-                }
-            }]
-        }
-
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        if(response.status_code == 200):
+            data = response.json()
+    except:
+       pass
+    
     return data

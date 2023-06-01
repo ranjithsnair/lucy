@@ -8,6 +8,9 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 function App() {
+
+  const openAIUrl = "%API_URL%";
+
   const [isTyping, setIsTyping] = useState(false)
   const [userWarning, setUserWarning] = useState("")
   const [chatMode, setChatMode] = useState("chat")
@@ -32,7 +35,7 @@ function App() {
           timestamp={new Date().toLocaleTimeString()}
         />
       ),
-      variables: {role: "assistant", content: "Hi there, I'm Lucy, an AI assistant! How can I help you?"}
+      variables: { role: "assistant", content: "Hi there, I'm Lucy, an AI assistant! How can I help you?" }
     }
   ])
 
@@ -53,7 +56,7 @@ function App() {
           <Chat.Message content={message} author="User" timestamp={new Date().toLocaleTimeString()} mine />
         ),
         contentPosition: 'end',
-        variables: {role: "user", content: message}
+        variables: { role: "user", content: message }
       }
     ])
     setMessages(newMessages);
@@ -65,7 +68,7 @@ function App() {
       content: x.variables.content
     })) as any;
 
-    if(chatMode === "query" && fileContent !== ""){
+    if (chatMode === "query" && fileContent !== "") {
       var lastChat = chatHistory.findLast(() => true) as any;
       lastChat.content = `Based on the following file contents, ${lastChat?.content} File: ${selectedFile} ${fileContent}`
     }
@@ -77,8 +80,8 @@ function App() {
         messages: chatHistory
       })
     };
-    
-    fetch('%API_URL%/chat', options)
+
+    fetch(`${openAIUrl}/chat`, options)
       .then(response => response.json())
       .then(data => {
         setIsTyping(false);
@@ -100,7 +103,7 @@ function App() {
                   timestamp={new Date().toLocaleTimeString()}
                 />
               ),
-              variables: {role: "assistant", content: data.choices[0].message.content}
+              variables: { role: "assistant", content: data.choices[0].message.content }
             }
           ])
           setMessages(newMessages);
@@ -162,14 +165,14 @@ function App() {
       method: 'POST',
       body: data
     };
-    
-    fetch('%API_URL%/files', options)
+
+    fetch(`${openAIUrl}/files`, options)
       .then(response => response.json())
       .then(data => {
         var newDocument = {
           key: data.fileName,
           content: data.fileName,
-          variables: {content: data.content},
+          variables: { content: data.content },
           icon: (
             <Image
               src="./images/document.png"
@@ -177,7 +180,7 @@ function App() {
             />
           ),
         }
-    
+
         var newDocuments = docs.concat([newDocument]);
         setDocs(newDocuments);
       })
@@ -194,80 +197,75 @@ function App() {
   }
 
   return (
-    <Flex column style={{ backgroundColor: 'rgb(243, 242, 241)' }}>
-      <Flex.Item>
-        <h1 style={{ marginLeft: 20 }}>Lucy</h1>
-      </Flex.Item>
-      <Flex style={{ backgroundColor: 'rgb(243, 242, 241)' }}>
-        <Flex.Item size="size.quarter">
-          <Card inverted>
-            <Card.Body>
-              <Flex column gap='gap.smaller'>
-                <Flex.Item align='end'>
-                  <Button hidden={docs.length === 0} icon={<TrashCanIcon />} text primary content="Clear" onClick={clearDocuments} />
-                </Flex.Item>
-                <Menu
-                  vertical
-                  fluid
-                  onItemClick={handleDocumentClick}
-                  hidden={docs.length === 0}
-                  items={docs} />
-                <Flex.Item align='end'>
-                  <Button hidden={docs.length === 0} icon={<ChatIcon />} text primary content="Switch to chat mode" onClick={switchToChatMode} disabled={chatMode === "chat" ? true : false} />
-                </Flex.Item>
-                <Alert content="No documents available" visible={docs.length === 0} variables={{ oof: true }} />
-              </Flex>
-            </Card.Body>
-          </Card>
-        </Flex.Item>
-        <Card fluid inverted>
-          <Card.Header>
-            <Flex gap="gap.small">
-              <Avatar
-                image="./images/bot.jpg"
-                status={{
-                  color: 'green',
-                  icon: <AcceptIcon />
-                }}
-              />
-              <Flex column>
-                <Text content="Lucy" weight="bold" />
-                <Text content={isTyping ? 'Typing' : 'Available'} size="small" />
-              </Flex>
-            </Flex>
-          </Card.Header>
+    <Flex style={{ backgroundColor: 'rgb(243, 242, 241)' }}>
+      <Flex.Item size="size.quarter">
+        <Card inverted>
           <Card.Body>
-            <Flex column style={{ height: '65vh' }}>
-              <Divider />
-              <div
-                ref={scrollRef}
-                style={{
-                  overflow: 'scroll'
-                }}
-              >
-                <Chat items={messages} />
-              </div>
+            <Flex column gap='gap.smaller'>
+              <Flex.Item align='end'>
+                <Button hidden={docs.length === 0} icon={<TrashCanIcon />} text primary content="Clear" onClick={clearDocuments} />
+              </Flex.Item>
+              <Menu
+                vertical
+                fluid
+                onItemClick={handleDocumentClick}
+                hidden={docs.length === 0}
+                items={docs} />
+              <Flex.Item align='end'>
+                <Button hidden={docs.length === 0} icon={<ChatIcon />} text primary content="Switch to chat mode" onClick={switchToChatMode} disabled={chatMode === "chat" ? true : false} />
+              </Flex.Item>
+              <Alert content="No documents available" visible={docs.length === 0} variables={{ oof: true }} />
             </Flex>
           </Card.Body>
-          <Card.Footer fitted>
-            <Flex column gap="gap.small">
-              <Text weight='bold' style={{ marginLeft: 45 }}>{userWarning}</Text>
-              <Flex gap="gap.small">
-                <input
-                  style={{ display: 'none' }}
-                  ref={uploadRef}
-                  type="file"
-                  accept="application/pdf"
-                  onChange={addDocument}
-                />
-                <Button circular icon={<PaperclipIcon />} onClick={uploadDocument} />
-                <TextArea fluid inverted placeholder="Type a new message" maxLength={4000} value={message} onChange={(event: any) => setMessage(event.target.value)} required onKeyDown={submitOnEnter} />
-                <Button circular icon={<SendIcon />} primary onClick={sendMessage} />
-              </Flex>
-            </Flex>
-          </Card.Footer>
         </Card>
-      </Flex>
+      </Flex.Item>
+      <Card fluid inverted>
+        <Card.Header>
+          <Flex gap="gap.small">
+            <Avatar
+              image="./images/bot.jpg"
+              status={{
+                color: 'green',
+                icon: <AcceptIcon />
+              }}
+            />
+            <Flex column>
+              <Text content="Lucy" weight="bold" />
+              <Text content={isTyping ? 'Typing' : 'Available'} size="small" />
+            </Flex>
+          </Flex>
+        </Card.Header>
+        <Card.Body>
+          <Flex column style={{ height: '65vh' }}>
+            <Divider />
+            <div
+              ref={scrollRef}
+              style={{
+                overflow: 'scroll'
+              }}
+            >
+              <Chat items={messages} />
+            </div>
+          </Flex>
+        </Card.Body>
+        <Card.Footer fitted>
+          <Flex column gap="gap.small">
+            <Text weight='bold' style={{ marginLeft: 45 }}>{userWarning}</Text>
+            <Flex gap="gap.small">
+              <input
+                style={{ display: 'none' }}
+                ref={uploadRef}
+                type="file"
+                accept="application/pdf"
+                onChange={addDocument}
+              />
+              <Button circular icon={<PaperclipIcon />} onClick={uploadDocument} />
+              <TextArea fluid inverted placeholder="Type a new message" maxLength={4000} value={message} onChange={(event: any) => setMessage(event.target.value)} required onKeyDown={submitOnEnter} />
+              <Button circular icon={<SendIcon />} primary onClick={sendMessage} />
+            </Flex>
+          </Flex>
+        </Card.Footer>
+      </Card>
     </Flex>
   );
 }

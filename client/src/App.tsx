@@ -44,6 +44,16 @@ function App() {
   const uploadRef = useRef(null);
   const scrollRef = useRef(null);
 
+  function renderMarkdown(content: string) {
+    const markdownRegex = /([*_~`]|#{1,6}|\[.+\]\(.+\))/;
+
+    if(markdownRegex.test(content)){
+      return <Markdown children={content} />;
+    }
+    else {
+      return content;
+    }
+  }
 
   function sendMessage() {
     if (message === "") {
@@ -102,7 +112,7 @@ function App() {
               message: (
                 <ChatMessage
                   author="Lucy"
-                  content={ <Markdown children={data.choices[0].message.content} />}
+                  content={renderMarkdown(data.choices[0].message.content)}
                   timestamp={new Date().toLocaleTimeString()}
                 />
               ),

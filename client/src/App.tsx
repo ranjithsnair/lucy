@@ -1,14 +1,16 @@
 import { useState, useRef } from 'react';
 import './App.css';
 import {
-  ChatIcon, SendIcon, Card, Flex, Avatar, Text, Chat, AcceptIcon, TextArea,
-  ChatMessage, PersonIcon, Divider, Image, Button, PaperclipIcon, Alert,
-  Menu, TrashCanIcon
+  ChatIcon, SendIcon, Card, Flex, Avatar, Text, Chat, AcceptIcon, TextArea, Attachment,
+  ChatMessage, PersonIcon, Divider, Button, PaperclipIcon, Alert, TrashCanIcon, FilesPdfIcon
 } from "@fluentui/react-northstar"
 import { v4 as uuidv4 } from "uuid";
+import { useMediaQuery } from 'react-responsive'
+import Markdown from 'react-markdown'
 
 function App() {
 
+  const isMobile = useMediaQuery({ query: '(max-width: 820px)' });
   const openAIUrl = "%API_URL%";
 
   const [isTyping, setIsTyping] = useState(false)
@@ -41,6 +43,7 @@ function App() {
 
   const uploadRef = useRef(null);
   const scrollRef = useRef(null);
+
 
   function sendMessage() {
     if (message === "") {
@@ -99,7 +102,7 @@ function App() {
               message: (
                 <ChatMessage
                   author="Lucy"
-                  content={data.choices[0].message.content}
+                  content={ <Markdown children={data.choices[0].message.content} />}
                   timestamp={new Date().toLocaleTimeString()}
                 />
               ),
@@ -124,25 +127,30 @@ function App() {
     setSelectedFile("")
   }
 
-  function attachDocument(fileName: string, content: string) {
-    setUserWarning(`Lucy is now available for you to ask questions specifically related to the file named ${fileName}`);
-    setChatMode('query');
-    setFileContent(content);
-    setSelectedFile(fileName);
-  }
-
   function uploadDocument() {
     if (uploadRef.current != null) {
       (uploadRef.current as any).click();
     }
   }
 
-  function handleDocumentClick(event: any, data: any): void {
-    attachDocument(data.content, data.variables.content);
-  }
-
   function clearDocuments() {
     setDocs([]);
+    setUserWarning("");
+    setChatMode('chat');
+    setFileContent("");
+    setSelectedFile("")
+  }
+
+  function deleteDocument(fileName: string) {
+    var newDocs = docs.filter((doc) => doc.fileName !== fileName);
+    setDocs(newDocs);
+
+    if (selectedFile === fileName) {
+      setUserWarning("");
+      setChatMode('chat');
+      setFileContent("");
+      setSelectedFile("")
+    }
   }
 
   function addDocument(event: any): void {
@@ -170,15 +178,8 @@ function App() {
       .then(response => response.json())
       .then(data => {
         var newDocument = {
-          key: data.fileName,
-          content: data.fileName,
-          variables: { content: data.content },
-          icon: (
-            <Image
-              src="./images/document.png"
-              avatar
-            />
-          ),
+          fileName: data.fileName,
+          content: data.content
         }
 
         var newDocuments = docs.concat([newDocument]);
@@ -196,8 +197,15 @@ function App() {
     }
   }
 
+  function documentSelected(doc: any) {
+    setUserWarning(`Lucy is now available for you to ask questions specifically related to the file named ${doc.fileName}`);
+    setChatMode('query');
+    setFileContent(doc.content);
+    setSelectedFile(doc.fileName);
+  }
+
   return (
-    <Flex style={{ backgroundColor: 'rgb(243, 242, 241)' }}>
+    <Flex style={{ backgroundColor: 'rgb(243, 242, 241)' }} column={isMobile ? true : false}>
       <Flex.Item size="size.quarter">
         <Card inverted>
           <Card.Body>
@@ -205,12 +213,29 @@ function App() {
               <Flex.Item align='end'>
                 <Button hidden={docs.length === 0} icon={<TrashCanIcon />} text primary content="Clear" onClick={clearDocuments} />
               </Flex.Item>
-              <Menu
-                vertical
-                fluid
-                onItemClick={handleDocumentClick}
-                hidden={docs.length === 0}
-                items={docs} />
+              <Flex column>
+                <>
+                  {docs.map(function (doc) {
+                    return (
+                      <Attachment
+                        key={doc.fileName}
+                        header={doc.fileName.length > 27 ? doc.fileName.substring(0, 22) + "..." : doc.fileName}
+                        icon={<FilesPdfIcon size='large' />}
+                        actionable
+                        onClick={() => documentSelected(doc)}
+                        action={{
+                          icon: <TrashCanIcon />,
+                          onClick: ((e) => {
+                            deleteDocument(doc.fileName);
+                            e.stopPropagation();
+                          }),
+                          title: 'Delete',
+                        }}
+                      />
+                    )
+                  })}
+                </>
+              </Flex>
               <Flex.Item align='end'>
                 <Button hidden={docs.length === 0} icon={<ChatIcon />} text primary content="Switch to chat mode" onClick={switchToChatMode} disabled={chatMode === "chat" ? true : false} />
               </Flex.Item>

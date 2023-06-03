@@ -11,7 +11,7 @@ import Markdown from 'react-markdown'
 function App() {
 
   const isMobile = useMediaQuery({ query: '(max-width: 820px)' });
-  const openAIUrl = "%API_URL%";
+  const openAIUrl = "http://localhost:8000";
 
   const [isTyping, setIsTyping] = useState(false)
   const [userWarning, setUserWarning] = useState("")

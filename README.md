@@ -19,7 +19,7 @@ To run the Lucy chatbot application locally, follow these steps:
 
 ### Frontend Setup
 
-1. Clone the repository: `https://github.com/ranjithsnair/lucy.git`
+1. Clone the repository: `git clone https://github.com/ranjithsnair/lucy.git`
 2. Navigate to the frontend directory: `cd .\lucy\client\`
 3. Install dependencies: `npm install`
 4. Start the development server: `npm start`

@@ -14,8 +14,9 @@ To run the Lucy chatbot application locally, follow these steps:
 
 ### Prerequisites
 
-* Node.js and npm: Install Node.js and npm (Node Package Manager) by visiting the official website and downloading the installer for your operating system.
-* Python: Install Python by visiting the official website and downloading the installer for your operating system.
+* `Node.js` and `npm`: Install Node.js and npm (Node Package Manager) by visiting the official website and downloading the installer for your operating system.
+* `Python`: Install Python by visiting the official website and downloading the installer for your operating system.
+* `OpenAI`: A free OpenAI account.
 
 ### Frontend Setup
 

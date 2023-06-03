@@ -25,7 +25,7 @@ To run the Lucy chatbot application locally, follow these steps:
 4. Start the development server: `npm start`
 5. Access the application at `http://localhost:3000`
 
-![lucy](./docs/images/lucy.jpg)
+    ![lucy](./docs/images/lucy.jpg)
 
 ### Backend Setup
 

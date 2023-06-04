@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import {
   ChatIcon, SendIcon, Card, Flex, Avatar, Text, Chat, AcceptIcon, TextArea, Attachment,
-  ChatMessage, PersonIcon, Divider, Button, PaperclipIcon, Alert, TrashCanIcon, FilesPdfIcon
+  ChatMessage, PersonIcon, Divider, Button, PaperclipIcon, Alert, TrashCanIcon, FilesPdfIcon,
+  WordColorIcon, ExcelColorIcon, FilesTextColoredIcon, FilesCodeIcon
 } from "@fluentui/react-northstar"
 import { v4 as uuidv4 } from "uuid";
 import { useMediaQuery } from 'react-responsive'
@@ -237,6 +238,55 @@ function App() {
     return fileName.length > 27 ? fileName.substring(0, 22) + "..." : fileName
   }
 
+  function getFileIcons(fileType: string) {
+    switch (fileType.toLowerCase()) {
+      case "pdf":
+        return <FilesPdfIcon size='large' />
+      case "txt":
+      case "log":
+      case "dat":
+        return <FilesTextColoredIcon size='large' />
+      case "xls":
+      case "xlsx":
+      case "csv":
+        return <ExcelColorIcon size='large' />
+      case "doc":
+      case "docx":
+        return <WordColorIcon size='large' />
+      default:
+        return <FilesCodeIcon size='large' />
+    }
+  }
+
+  let fileTypes = [
+    ".pdf",
+    ".txt",
+    ".log",
+    ".dat",
+    ".csv",
+    ".json",
+    ".xml",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".js",
+    ".css",
+    ".htm",
+    ".html",
+    ".sql",
+    ".py",
+    ".asp",
+    ".aspx",
+    ".jsp",
+    ".php",
+    ".c",
+    ".cpp",
+    ".cs",
+    ".vb",
+    ".java"
+  ].join(", ")
+
   return (
     <Flex style={{ backgroundColor: 'rgb(243, 242, 241)' }} column={isMobile ? true : false}>
       <Flex.Item size="size.quarter">
@@ -253,7 +303,7 @@ function App() {
                       <Attachment
                         key={doc.fileName}
                         header={truncateFileName(doc.fileName)}
-                        icon={<FilesPdfIcon size='large' />}
+                        icon={getFileIcons(doc.fileName.split('.').pop())}
                         actionable
                         onClick={() => documentSelected(doc)}
                         action={{
@@ -314,7 +364,7 @@ function App() {
                 style={{ display: 'none' }}
                 ref={uploadRef}
                 type="file"
-                accept="application/pdf"
+                accept={fileTypes}
                 onChange={addDocument}
               />
               <Button circular icon={<PaperclipIcon />} onClick={uploadDocument} />

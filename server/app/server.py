@@ -4,12 +4,10 @@ import os
 import requests
 from pydantic import BaseModel
 from typing import List
-import PyPDF2
 import pathlib
 import uuid
 import os
-import string
-import re
+import textract
 
 app = FastAPI()
 
@@ -37,28 +35,27 @@ class Chat(BaseModel):
 @app.get("/", tags=["Health"])
 async def get_health() -> dict:
     return {
-        "statusCode": 200,
+        "version": "1.0.0",
         "message": "The target is healthy."
     }
 
 @app.post("/files", tags=["Lucy"])
 async def post_file(file: UploadFile) -> dict:
     requestId = uuid.uuid4()
-    path = f"{pathlib.Path(__file__).parent.resolve()}/{requestId}"
+    extension = pathlib.Path(file.filename).suffix.lower()
+    path = f"{pathlib.Path(__file__).parent.resolve()}/{requestId}{extension}"
+    text = ""
+    documents = [".pdf", ".doc", ".docx", ".xls", ".xlsx"]
 
     try:
         with open(path, 'wb') as tempFile:
             content = await file.read()
             tempFile.write(content)
-
-        reader = PyPDF2.PdfReader(path)
-        for pageIndex in range(0, len(reader.pages)):
-            page = reader.pages[pageIndex]
-            content+= page.extract_text().encode("utf-8")
         
-        content = content.decode('utf-8', 'ignore')
-        content = content[content.rfind('%%EOF')+5:]
-        content =  ''.join(filter(lambda x: x in string.printable, content)).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+        if extension in documents:
+            text = textract.process(path)
+        else:
+            text = open(path, "r").read()
     except:
         pass
     finally:
@@ -67,7 +64,7 @@ async def post_file(file: UploadFile) -> dict:
             
     return {
         "fileName": file.filename,
-        "content": content
+        "content": text
     }
 
 @app.post("/chat", tags=["OpenAI"])
@@ -86,7 +83,8 @@ async def post_chat(chat: Chat) -> dict:
 
     headers = {
         "Content-Type": "application/json",
-        "api-key": api_key
+        "api-key": api_key,
+        "User-Agent": "Lucy"
     }
 
     payload = {

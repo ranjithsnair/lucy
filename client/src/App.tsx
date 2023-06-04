@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import {
   ChatIcon, SendIcon, Card, Flex, Avatar, Text, Chat, AcceptIcon, TextArea, Attachment,
@@ -20,6 +20,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState("")
   const [message, setMessage] = useState("")
   const [docs, setDocs] = useState<any[]>([])
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [messages, setMessages] = useState<any[]>([
     {
       key: uuidv4(),
@@ -44,10 +45,22 @@ function App() {
   const uploadRef = useRef(null);
   const scrollRef = useRef(null);
 
+  useEffect(() => {
+    const handleWindowResize = () => {
+      setWindowHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  });
+
   function renderMarkdown(content: string) {
     const markdownRegex = /([*_~`]|#{1,6}|\[.+\]\(.+\))/;
 
-    if(markdownRegex.test(content)){
+    if (markdownRegex.test(content)) {
       return <Markdown children={content} />;
     }
     else {
@@ -66,7 +79,11 @@ function App() {
         key: uuidv4(),
         gutter: (<Avatar icon={<PersonIcon />} />),
         message: (
-          <Chat.Message content={message} author="User" timestamp={new Date().toLocaleTimeString()} mine />
+          <Chat.Message content={message} author="User" timestamp={new Date().toLocaleTimeString()} mine details={selectedFile !== null && selectedFile !== "" &&
+            <>
+              {truncateFileName(selectedFile)} <PaperclipIcon size="small" />
+            </>
+          } />
         ),
         contentPosition: 'end',
         variables: { role: "user", content: message }
@@ -93,6 +110,8 @@ function App() {
         messages: chatHistory
       })
     };
+
+    switchToChatMode();
 
     fetch(`${openAIUrl}/chat`, options)
       .then(response => response.json())
@@ -214,10 +233,14 @@ function App() {
     setSelectedFile(doc.fileName);
   }
 
+  function truncateFileName(fileName: string) {
+    return fileName.length > 27 ? fileName.substring(0, 22) + "..." : fileName
+  }
+
   return (
     <Flex style={{ backgroundColor: 'rgb(243, 242, 241)' }} column={isMobile ? true : false}>
       <Flex.Item size="size.quarter">
-        <Card inverted>
+        <Card inverted fluid={isMobile ? true : false}>
           <Card.Body>
             <Flex column gap='gap.smaller'>
               <Flex.Item align='end'>
@@ -229,7 +252,7 @@ function App() {
                     return (
                       <Attachment
                         key={doc.fileName}
-                        header={doc.fileName.length > 27 ? doc.fileName.substring(0, 22) + "..." : doc.fileName}
+                        header={truncateFileName(doc.fileName)}
                         icon={<FilesPdfIcon size='large' />}
                         actionable
                         onClick={() => documentSelected(doc)}
@@ -271,7 +294,7 @@ function App() {
           </Flex>
         </Card.Header>
         <Card.Body>
-          <Flex column style={{ height: '65vh' }}>
+          <Flex column style={{ height: `${windowHeight - 225}px` }}>
             <Divider />
             <div
               ref={scrollRef}
